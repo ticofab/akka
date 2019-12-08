@@ -1,13 +1,13 @@
 # Distributed Publish Subscribe in Cluster
 
-For the Akka Classic documentation of this feature see [Classic Distributed Publish Subscribe](../distributed-pub-sub.md).
+For the Akka Classic documentation of this feature see @ref:[Classic Distributed Publish Subscribe](../distributed-pub-sub.md).
 Classic Pub Sub can be used by leveraging the `.toClassic` adapters until @github[#26338](#26338).
 
 ## Module info
 
 Until the new Distributed Publish Subscribe API, see @github[#26338](#26338), 
 you can use Classic Distributed Publish Subscribe 
-[coexisting](coexisting.md) with new Cluster and actors. To do this, add following dependency in your project:
+@ref:[coexisting](coexisting.md) with new Cluster and actors. To do this, add following dependency in your project:
 
 @@dependency[sbt,Maven,Gradle] {
   group="com.typesafe.akka"

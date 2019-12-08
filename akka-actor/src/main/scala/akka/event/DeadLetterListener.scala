@@ -8,11 +8,13 @@ import scala.concurrent.duration.Deadline
 import scala.concurrent.duration.FiniteDuration
 
 import akka.actor.Actor
+import akka.actor.ActorLogMarker
 import akka.actor.ActorRef
 import akka.actor.AllDeadLetters
 import akka.actor.DeadLetter
 import akka.actor.DeadLetterActorRef
 import akka.actor.Dropped
+import akka.actor.WrappedMessage
 import akka.event.Logging.Info
 import akka.util.PrettyDuration._
 
@@ -96,13 +98,16 @@ class DeadLetterListener extends Actor {
 
   private def logDeadLetter(d: AllDeadLetters, doneMsg: String): Unit = {
     val origin = if (isReal(d.sender)) s" from ${d.sender}" else ""
+    val unwrapped = WrappedMessage.unwrap(d.message)
+    val messageStr = unwrapped.getClass.getName
+    val wrappedIn = if (d.message.isInstanceOf[WrappedMessage]) s" wrapped in [${d.message.getClass.getName}]" else ""
     val logMessage = d match {
       case dropped: Dropped =>
         val destination = if (isReal(d.recipient)) s" to ${d.recipient}" else ""
-        s"Message [${d.message.getClass.getName}]$origin$destination was dropped. ${dropped.reason}. " +
+        s"Message [$messageStr]$wrappedIn$origin$destination was dropped. ${dropped.reason}. " +
         s"[$count] dead letters encountered$doneMsg. "
       case _ =>
-        s"Message [${d.message.getClass.getName}]$origin to ${d.recipient} was not delivered. " +
+        s"Message [$messageStr]$wrappedIn$origin to ${d.recipient} was not delivered. " +
         s"[$count] dead letters encountered$doneMsg. " +
         s"If this is not an expected behavior then ${d.recipient} may have terminated unexpectedly. "
     }
@@ -112,7 +117,9 @@ class DeadLetterListener extends Actor {
         d.recipient.getClass,
         logMessage +
         "This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' " +
-        "and 'akka.log-dead-letters-during-shutdown'."))
+        "and 'akka.log-dead-letters-during-shutdown'.",
+        Logging.emptyMDC,
+        ActorLogMarker.deadLetter(messageStr)))
   }
 
   private def isReal(snd: ActorRef): Boolean = {
